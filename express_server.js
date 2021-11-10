@@ -46,6 +46,19 @@ app.post(`/urls/:shortURL/delete`, (req, res) => {
   res.redirect("/urls");
 })
 
+app.post(`/urls/:shortURL/update`, (req, res) => {
+  let key = Object.keys(req.body)[0];
+  let keyDatabase = Object.keys(urlDatabase);
+  for (let item of keyDatabase) {
+    if (key === item) {
+      const tempVariable = urlDatabase[key];
+      delete urlDatabase[key];
+      urlDatabase[req.body[key]] = tempVariable;
+    }
+  }
+  res.redirect('/urls');
+})
+
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL,
