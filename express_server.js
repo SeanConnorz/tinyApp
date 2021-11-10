@@ -66,12 +66,16 @@ app.post(`/urls/:shortURL/delete`, (req, res) => {
   res.redirect("/urls");
 })
 
-app.post(`/urls/:shortURL/update`, (req, res) => {
+app.post('/urls/:shortURL/update', (req, res) => {
   const key = Object.keys(req.body)[0];
   const tempVariable = urlDatabase[key];
   delete urlDatabase[key];
   urlDatabase[req.body[key]] = tempVariable;
   res.redirect('/urls');
+})
+
+app.get('/register', (req, res) => {
+  res.render('register');
 })
 
 app.post('/login', (req, res) => {
