@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const bodyParser = require("body-parser");
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -22,8 +23,8 @@ function generateRandomString(length) {
 
 const emailLookUp = (email) => {
   const key = Object.keys(users);
-  for (let item of key) {
-    if (users[item].email === email) {
+  for (let user_id of key) {
+    if (users[user_id].email === email) {
       return true;
     } 
   }
@@ -32,10 +33,8 @@ const emailLookUp = (email) => {
 
 const passwordLookUp = (password) => {
   const key = Object.keys(users);
-  for (let item of key) {
-    if (users[item].password === password) {
-      return true;
-    } 
+  for (let user_id of key) {
+    if (bcrypt.compareSync(password, users[user_id].password)) return true;
   }
   return false;
 }
@@ -156,7 +155,8 @@ app.post('/urls/:shortURL/update', (req, res) => {
 app.post('/register', (req, res) => {
   userNumber += 1;
   let userId = `user${userNumber}`;
-  console.log(users);
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (emailLookUp(req.body.email)) {
     res.send('error: 404')
@@ -170,7 +170,7 @@ app.post('/register', (req, res) => {
     users[userId] = {
       id: userId,
       email: req.body.email,
-      password: req.body.password
+      password: hashedPassword
     };
     res.cookie('user_id', userId);
     res.redirect('/urls');
