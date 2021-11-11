@@ -18,7 +18,11 @@ app.use(cookieSession({
 
 app.set("view engine", "ejs");
 
-const urlDatabase = {};
+const urlDatabase = { 
+  x4d4ff: {
+    longURL: 'http://google.com',
+  }
+};
 const users = {};
 
 app.get("/urls", (req, res) => {
@@ -42,7 +46,10 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
+  if (!req.session.user_id) {
+    res.redirect('/login');
+  }
+  else if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
     const templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
@@ -131,9 +138,9 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  let userId = 'user1';
 
   if (getUserByEmail(email, users)) {
+    const userId = getUserByEmail(email, users);
     if (verifyPassword(password, users)) {
       req.session.user_id = userId;
     } else {
