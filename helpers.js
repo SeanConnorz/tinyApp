@@ -9,10 +9,12 @@ const getUserByEmail = (email, database) => {
   }
 };
 
-const verifyPassword = (password, database) => {
+const verifyPassword = (email, password, database) => {
   const key = Object.keys(database);
   for (let user_id of key) {
-    if (bcrypt.compareSync(password, database[user_id].password)) return true;
+    if (email === database[user_id].email) {
+      if (bcrypt.compareSync(password, database[user_id].password)) return true;
+    }
   }
   return false;
 };
@@ -36,9 +38,21 @@ const urlsForUser = (id, database) => {
   }
 };
 
+const urlsObjectForUser = (id, database) => {
+  let object = {};
+  const keys = Object.keys(database);
+  for (let item of keys) {
+    if (id === database[item].userId) {
+      object[item] = database[item];
+    }
+  }
+  return object;
+};
+
 module.exports = {
   getUserByEmail,
   verifyPassword,
   generateRandomString,
-  urlsForUser
+  urlsForUser,
+  urlsObjectForUser
 };

@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const { getUserByEmail,
   verifyPassword,
   generateRandomString,
-  urlsForUser   } = require('./helpers');
+  urlsForUser, 
+  urlsObjectForUser} = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -26,8 +27,9 @@ const urlDatabase = {
 const users = {};
 
 app.get("/urls", (req, res) => {
+  console.log(urlsObjectForUser(req.session.user_id, urlDatabase))
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsObjectForUser(req.session.user_id, urlDatabase),
     users: users[req.session.user_id],
     userRegistered: req.session.user_id,
   };
@@ -67,26 +69,37 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const templateVars = {
-    users: users[req.session.user_id]
-  };
-  res.render('register', templateVars);
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    const templateVars = {
+      users: users[req.session.user_id]
+    };
+    res.render('register', templateVars);
+  }
 });
 
 app.get('/login', (req, res) => {
-  const templateVars = {
-    users: users[req.session.user_id]
-  };
-  res.render('login', templateVars);
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else { 
+    const templateVars = {
+      users: users[req.session.user_id]
+    };
+    res.render('login', templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = {
-    longURL: req.body.longURL,
-    userId: req.session.user_id
-  };
-  res.redirect(`/urls/${shortURL}`);
+  if (req.session.user_id) {
+    const shortURL = generateRandomString(6);
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userId: req.session.user_id
+    };
+    res.redirect(`/urls/${shortURL}`);
+  }
+  res.send("please login or register");
 });
 
 app.post(`/urls/:shortURL/delete`, (req, res) => {
@@ -98,7 +111,7 @@ app.post(`/urls/:shortURL/delete`, (req, res) => {
   }
 });
 
-app.post('/urls/:shortURL/update', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   if (req.session.user_id) {
     const key = Object.keys(req.body)[0];
     const tempVariable = urlDatabase[key];
@@ -122,7 +135,7 @@ app.post('/register', (req, res) => {
     res.send('Error: one or more of the fields was left empty');
   }
 
-  if (getUserByEmail(req.body.email, users)) {
+  else if (getUserByEmail(req.body.email, users)) {
     res.send('This email already exists');
   } else {
     users[userId] = {
@@ -141,7 +154,7 @@ app.post('/login', (req, res) => {
 
   if (getUserByEmail(email, users)) {
     const userId = getUserByEmail(email, users);
-    if (verifyPassword(password, users)) {
+    if (verifyPassword(email, password, users)) {
       req.session.user_id = userId;
     } else {
       res.send('Either the email of password is incorrect');
@@ -154,6 +167,7 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie('session');
+  res.clearCookie('session.sig  ');
   res.redirect('/urls');
 });
 
