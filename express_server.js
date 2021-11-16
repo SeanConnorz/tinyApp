@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const { getUserByEmail,
   verifyPassword,
   generateRandomString,
-  urlsForUser, 
+  urlsForUser,
   urlsObjectForUser} = require('./helpers');
 
 const app = express();
@@ -19,15 +19,23 @@ app.use(cookieSession({
 
 app.set("view engine", "ejs");
 
-const urlDatabase = { 
+const urlDatabase = {
   x4d4ff: {
     longURL: 'http://google.com',
   }
 };
 const users = {};
 
+app.get("/", (req, res) => {
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+});
+
 app.get("/urls", (req, res) => {
-  console.log(urlsObjectForUser(req.session.user_id, urlDatabase))
+  console.log(urlsObjectForUser(req.session.user_id, urlDatabase));
   const templateVars = {
     urls: urlsObjectForUser(req.session.user_id, urlDatabase),
     users: users[req.session.user_id],
@@ -50,8 +58,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session.user_id) {
     res.redirect('/login');
-  }
-  else if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
+  } else if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
     const templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
@@ -82,7 +89,7 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
   if (req.session.user_id) {
     res.redirect('/urls');
-  } else { 
+  } else {
     const templateVars = {
       users: users[req.session.user_id]
     };
@@ -97,17 +104,20 @@ app.post("/urls", (req, res) => {
       longURL: req.body.longURL,
       userId: req.session.user_id
     };
-    res.redirect(`/urls/${shortURL}`);
+    res.redirect(`/urls`);
+  } else {
+    res.send("please login or register");
   }
-  res.send("please login or register");
 });
 
 app.post(`/urls/:shortURL/delete`, (req, res) => {
   if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
+  } else if (req.session.user_id) {
+    res.render("Logged in under the wrong account");
   } else {
-    res.redirect('/login');
+    res.render("please login or register");
   }
 });
 
@@ -133,9 +143,7 @@ app.post('/register', (req, res) => {
 
   if (!req.body.email || !req.body.password) {
     res.send('Error: one or more of the fields was left empty');
-  }
-
-  else if (getUserByEmail(req.body.email, users)) {
+  } else if (getUserByEmail(req.body.email, users)) {
     res.send('This email already exists');
   } else {
     users[userId] = {
