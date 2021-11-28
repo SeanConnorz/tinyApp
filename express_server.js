@@ -29,13 +29,11 @@ const users = {};
 app.get("/", (req, res) => {
   if (req.session.user_id) {
     res.redirect("/urls");
-  } else {
-    res.redirect("/login");
-  }
+  } 
+  res.redirect("/login");
 });
 
 app.get("/urls", (req, res) => {
-  console.log(urlsObjectForUser(req.session.user_id, urlDatabase));
   const templateVars = {
     urls: urlsObjectForUser(req.session.user_id, urlDatabase),
     users: users[req.session.user_id],
@@ -57,7 +55,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session.user_id) {
-    res.redirect('/login');
+    res.send('please login or register');
   } else if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
     const templateVars = {
       shortURL: req.params.shortURL,
@@ -124,12 +122,10 @@ app.post(`/urls/:shortURL/delete`, (req, res) => {
 app.post('/urls/:id', (req, res) => {
   if (req.session.user_id) {
     const key = Object.keys(req.body)[0];
-    const tempVariable = urlDatabase[key];
-    delete urlDatabase[key];
-    urlDatabase[req.body[key]] = tempVariable;
+    urlDatabase[key].longURL = req.body[key];
     res.redirect('/urls');
   } else {
-    res.redirect('/login');
+    res.send('/login');
   }
 });
 
