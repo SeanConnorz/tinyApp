@@ -30,12 +30,14 @@ const generateRandomString = (length) => {
 };
 
 const urlsForUser = (id, database) => {
+  const arr = [];
   const keys = Object.keys(database);
   for (let item of keys) {
     if (id === database[item].userId) {
-      return item;
+      arr.push(item);
     }
   }
+  return arr;
 };
 
 const urlsObjectForUser = (id, database) => {
@@ -54,5 +56,5 @@ module.exports = {
   verifyPassword,
   generateRandomString,
   urlsForUser,
-  urlsObjectForUser
+  urlsObjectForUser,
 };

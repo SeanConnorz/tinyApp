@@ -56,7 +56,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session.user_id) {
     res.send('please login or register');
-  } else if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
+  } else if (urlsForUser(req.session.user_id, urlDatabase).includes(req.params.shortURL)) {
     const templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
@@ -68,9 +68,14 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+app.get("/u/:id", (req, res) => {
+  let keys = Object.keys(urlDatabase);
+  for (let item of keys) {
+    if (urlDatabase[item].longURL === req.params.id) {
+      res.redirect(`/urls/${item}`);
+    }
+  }
+  res.send('error');
 });
 
 app.get('/register', (req, res) => {
@@ -102,6 +107,7 @@ app.post("/urls", (req, res) => {
       longURL: req.body.longURL,
       userId: req.session.user_id
     };
+    console.log(urlDatabase)
     res.redirect(`/urls`);
   } else {
     res.send("please login or register");
@@ -109,7 +115,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.post(`/urls/:shortURL/delete`, (req, res) => {
-  if (req.params.shortURL === urlsForUser(req.session.user_id, urlDatabase)) {
+  if (urlsForUser(req.session.user_id, urlDatabase).includes(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
   } else if (req.session.user_id) {
@@ -121,7 +127,7 @@ app.post(`/urls/:shortURL/delete`, (req, res) => {
 
 app.post('/urls/:id', (req, res) => {
   if (req.session.user_id) {
-    const key = Object.keys(req.body)[0];
+    const key = Object.keys(req.body);
     urlDatabase[key].longURL = req.body[key];
     res.redirect('/urls');
   } else {
