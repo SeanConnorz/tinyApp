@@ -107,7 +107,6 @@ app.post("/urls", (req, res) => {
       longURL: req.body.longURL,
       userId: req.session.user_id
     };
-    console.log(urlDatabase)
     res.redirect(`/urls`);
   } else {
     res.send("please login or register");
